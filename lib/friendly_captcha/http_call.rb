@@ -1,6 +1,6 @@
-require 'net/http'
-require 'openssl'
-require 'dry/monads'
+require "net/http"
+require "openssl"
+require "dry/monads"
 
 module FriendlyCaptcha
   class HttpCall
@@ -28,17 +28,20 @@ module FriendlyCaptcha
       end
     end
 
-    def perform(url, body)
+    def perform(url, body, **options)
       uri = URI(url)
 
-      options = {
-        use_ssl: uri.scheme.eql?('https'),
+      request_options = {
+        use_ssl: uri.scheme.eql?("https"),
         open_timeout: 500,
         read_timeout: 500
       }
 
-      ::Net::HTTP.start(uri.host, uri.port, options) do |http|
-        request = ::Net::HTTP::Post.new(uri, { 'Content-Type' => 'application/json' })
+      headers = options.fetch(:headers, {})
+      headers["Content-Type"] ||= "application/json"
+
+      ::Net::HTTP.start(uri.host, uri.port, request_options) do |http|
+        request = ::Net::HTTP::Post.new(uri, headers)
         request.body = body.to_json
         response = http.request(request)
 
